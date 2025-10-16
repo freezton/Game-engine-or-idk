@@ -39,6 +39,7 @@ add_executable(game
     src/main.cpp
     src/utils.cpp
     src/shader.cpp
+    src/stb_image.cpp
 )
 
 target_link_directories(game PRIVATE
