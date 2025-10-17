@@ -6,6 +6,10 @@
 #include <GLFW/glfw3.h>
 #include <stb/stb_image.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <string>
 #include <math.h>
 #include "shader.h"
@@ -29,6 +33,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 int main(void)
 {
+
     if (!glfwInit())
     {
         std::cout << "Failed to initialize GLFW" << std::endl;
@@ -122,10 +127,17 @@ int main(void)
     glGenerateMipmap(GL_TEXTURE_2D);
 
     stbi_image_free(data);
+
+    
+    // trans = glm::rotate(trans, glm::radians(180.0f), glm::vec3(1.0, 0.0, 0.0));
     
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(-0.5, 0, 0));
+        trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
         processInput(window); // add resize window callback
 
         ////////////////// render //////////////////
@@ -134,8 +146,11 @@ int main(void)
 
         // int vertexColorLocation = glGetUniformLocation(shaderProgram, "cColor");
         glBindTexture(GL_TEXTURE_2D, texture);
-        shaderProgram.use();
         // glUniform3f(vertexColorLocation, r, g, b);
+
+        unsigned int transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        shaderProgram.use();
 
         glBindVertexArray(VAO);
         // glDrawArrays(GL_TRIANGLES, 0, 3); // for VBOs only
