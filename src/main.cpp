@@ -20,20 +20,38 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
+glm::mat4 projection;
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
+
 void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    const float cameraSpeed = 2.5f * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
+    projection = glm::perspective(glm::radians(45.0f), (float)width / height, 0.1f, 100.0f);
 }
 
 int main(void)
 {
-
     if (!glfwInit())
     {
         std::cout << "Failed to initialize GLFW" << std::endl;
@@ -65,19 +83,34 @@ int main(void)
 
     stbi_set_flip_vertically_on_load(true);
 
-    ShaderProgram shaderProgram(RELATIVE_RESOURCE_PATH"shaders/vertex.vert", RELATIVE_RESOURCE_PATH"shaders/shader.frag");
+    ShaderProgram shaderProgram(RELATIVE_RESOURCE_PATH"shaders/vertex.glsl", RELATIVE_RESOURCE_PATH"shaders/fragment.glsl");
 
     ////////////////// draw triangle //////////////////
     GLfloat vertices[] = {
         // positions          // colors           // texture coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+         0.5f,  0.5f, -0.5f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+         0.5f, -0.5f, -0.5f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, -0.5f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+        -0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f,   // top left 
+         
+         0.5f,  0.5f, 0.5f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+         0.5f, -0.5f, 0.5f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, 0.5f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+        -0.5f,  0.5f, 0.5f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
     };
     GLuint indices[] = {
-        0, 1, 3,
+        0, 1, 3,//front
         1, 2, 3,
+        0, 1, 4,//right
+        1, 4, 5,
+        1, 6, 5,//bottom
+        1, 6, 2,
+        2, 7, 3,//left
+        2, 7, 6,
+        0, 7, 3,//top
+        0, 7, 4,
+        6, 4, 7,//back
+        6, 4, 5,
     };
     GLuint VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -116,7 +149,7 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, nrChannels;
@@ -130,32 +163,56 @@ int main(void)
 
     
     // trans = glm::rotate(trans, glm::radians(180.0f), glm::vec3(1.0, 0.0, 0.0));
+    glm::mat4 model = glm::mat4(1.0f);
+    // model = glm::translate(model, glm::vec3(-0.5, 0, 0));
+    // model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
+    model = glm::rotate(model, (float)glm::radians(-55.0), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    glm::mat4 view = glm::mat4(1.0f);
+    // view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+    projection = glm::perspective(glm::radians(45.0f), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
+
+    glEnable(GL_DEPTH_TEST);
+
+
     
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
-        glm::mat4 trans = glm::mat4(1.0f);
-        trans = glm::translate(trans, glm::vec3(-0.5, 0, 0));
-        trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
-        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
+        float currentTime = (float)glfwGetTime();
+        deltaTime = currentTime - lastFrame;
+        lastFrame = currentTime;
+
         processInput(window); // add resize window callback
 
         ////////////////// render //////////////////
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // int vertexColorLocation = glGetUniformLocation(shaderProgram, "cColor");
         glBindTexture(GL_TEXTURE_2D, texture);
         // glUniform3f(vertexColorLocation, r, g, b);
 
-        unsigned int transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, (float)glfwGetTime() / 2, glm::vec3(0.0f, 0.0f, 1.0f));
+
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
+        GLuint modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        GLuint viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        GLuint projLoc = glGetUniformLocation(shaderProgram.ID, "projection");
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
         shaderProgram.use();
 
         glBindVertexArray(VAO);
         // glDrawArrays(GL_TRIANGLES, 0, 3); // for VBOs only
         // glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(GLuint)));
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*)(0 * sizeof(GLuint)));
         glBindVertexArray(0);
         ////////////////////////////////////////////
 
