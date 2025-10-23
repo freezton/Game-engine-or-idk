@@ -37,9 +37,18 @@ set(LIBS ${LIBS} GLAD)
 
 add_executable(game 
     src/main.cpp
-    src/utils.cpp
     src/shader.cpp
     src/stb_image.cpp
+    src/camera.cpp
+)
+
+add_custom_command(TARGET game POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E remove_directory
+    "$<TARGET_FILE_DIR:game>/assets"
+    
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/assets"
+    "$<TARGET_FILE_DIR:game>/assets"
 )
 
 target_link_directories(game PRIVATE
@@ -49,5 +58,6 @@ target_link_directories(game PRIVATE
 
 include_directories(${CMAKE_SOURCE_DIR}/includes)
 target_link_libraries(game PRIVATE ${LIBS})
+
 # target_include_directories(CMAKE_PROJECT_NAME PRIVATE includes)
 # target_link_libraries(CMAKE_PROJECT_NAME ${LIBS})
