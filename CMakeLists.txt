@@ -33,6 +33,7 @@ elseif (MSVC)
 endif()
 
 add_library(GLAD "libs/glad/glad.c")
+target_include_directories(GLAD PUBLIC ${CMAKE_SOURCE_DIR}/includes)
 set(LIBS ${LIBS} GLAD)
 
 add_executable(game 
@@ -40,6 +41,8 @@ add_executable(game
     src/shader.cpp
     src/stb_image.cpp
     src/camera.cpp
+    src/mesh.cpp
+    src/model.cpp
 )
 
 add_custom_command(TARGET game POST_BUILD
@@ -51,13 +54,25 @@ add_custom_command(TARGET game POST_BUILD
     "$<TARGET_FILE_DIR:game>/assets"
 )
 
+# TODO: compile assimp separately
 target_link_directories(game PRIVATE
     ${CMAKE_SOURCE_DIR}/libs/GLFW
     ${CMAKE_SOURCE_DIR}/libs/assimp
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/includes)
-target_link_libraries(game PRIVATE ${LIBS})
+target_include_directories(game PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/include
+    ${CMAKE_SOURCE_DIR}/includes
+)
+
+# include_directories(
+    # ${CMAKE_SOURCE_DIR}/includes
+# )
+
+target_link_libraries(game PRIVATE 
+    ${LIBS}
+    ${CMAKE_SOURCE_DIR}/libs/assimp/assimp.lib
+)
 
 # target_include_directories(CMAKE_PROJECT_NAME PRIVATE includes)
 # target_link_libraries(CMAKE_PROJECT_NAME ${LIBS})
