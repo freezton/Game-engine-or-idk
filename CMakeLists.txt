@@ -43,6 +43,7 @@ add_executable(game
     src/camera.cpp
     src/mesh.cpp
     src/model.cpp
+    src/utils.cpp
 )
 
 add_custom_command(TARGET game POST_BUILD

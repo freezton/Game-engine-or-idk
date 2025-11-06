@@ -16,6 +16,7 @@
 #include "model.h"
 #include "shader.h"
 #include "camera.h"
+#include "utils.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -23,8 +24,8 @@
 
 #define RELATIVE_RESOURCE_PATH "assets/"
 
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
 #define FOVY 45.0f
 
 Camera camera(
@@ -47,7 +48,7 @@ void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
+    
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -84,6 +85,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
+void drawGrid()
+{
+    
+}
 
 int main(void)
 {
@@ -120,7 +125,8 @@ int main(void)
 
     stbi_set_flip_vertically_on_load(true);
 
-    Shader shaderProgram(RELATIVE_RESOURCE_PATH"shaders/vertex.glsl", RELATIVE_RESOURCE_PATH"shaders/fragment.glsl");
+    Shader modelShader(RELATIVE_RESOURCE_PATH"shaders/vertex.glsl", RELATIVE_RESOURCE_PATH"shaders/fragment.glsl");
+    Shader gridShader(RELATIVE_RESOURCE_PATH"shaders/grid_vertex.glsl", RELATIVE_RESOURCE_PATH"shaders/grid_fragment.glsl");
 
     // // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -154,9 +160,37 @@ int main(void)
     projection = glm::perspective(glm::radians(FOVY), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glm::vec3 lightPos = glm::vec3(5.0f, 4.0f, 5.0f);
 
+    // ///////////////////////////////////////////////////////////////////
+
+    // float lineVertices[] = {
+    //      100, 0, 0,
+    //     -100, 0, 0,
+    //      100, 0, -1,
+    //     -100, 0, -1,
+    //      100, 0, 1,
+    //     -100, 0, 1,
+    // };
+    // GLuint gVAO, gVBO;
+
+    // glGenVertexArrays(1, &gVAO);
+    // glBindVertexArray(gVAO);
+
+    // glGenBuffers(1, &gVBO);
+    // glBindBuffer(GL_ARRAY_BUFFER, gVBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(lineVertices), lineVertices, GL_STATIC_DRAW);
+
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // glEnableVertexAttribArray(0);
+
+    // glBindVertexArray(0); 
+    // ///////////////////////////////////////////////////////////////////
+
+    drawGrid();
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -177,24 +211,25 @@ int main(void)
 
         glm::mat4 model = glm::mat4(1.0f);
         // model = glm::rotate(model, (float)glfwGetTime()/3, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        // model = glm::rotate(model, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
         view = camera.GetViewMatrix();
+        drawGrid(gridShader, model, view, projection, camera.Position);
 
-        GLuint modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        GLuint viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        GLuint projLoc = glGetUniformLocation(shaderProgram.ID, "projection");
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-        
-        // shaderProgram.use();
+        glm::mat4 transformModel = glm::translate(model, glm::vec3(0.0f, sin(glfwGetTime()) * 5, 0.0f));
+        modelShader.use();
+
+        modelShader.setMat4("model", glm::scale(transformModel, glm::vec3(1.5f)));
+        modelShader.setMat4("view", view);
+        modelShader.setMat4("projection", projection);
+
         // GLuint lightLoc = glGetUniformLocation(shaderProgram.ID, "lightPos");
         // glUniform3fv(lightLoc, 1, glm::value_ptr(lightPos));
-        shaderProgram.setVec3("viewPos", camera.Position);
-        shaderProgram.setVec3("lightPos", lightPos);
 
-        cube.Draw(shaderProgram);
+        modelShader.setVec3("viewPos", camera.Position);
+        modelShader.setVec3("lightPos", lightPos);
+
+        cube.Draw(modelShader);
         glBindVertexArray(0);
         ////////////////////////////////////////////
 
