@@ -44,6 +44,12 @@ add_executable(game
     src/mesh.cpp
     src/model.cpp
     src/utils.cpp
+
+    src/component_array.cpp
+    src/entity_manager.cpp
+    src/component_manager.cpp
+    src/system_manager.cpp
+    src/coordinator.cpp
 )
 
 add_custom_command(TARGET game POST_BUILD

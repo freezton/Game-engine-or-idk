@@ -1,5 +1,6 @@
 #include "utils.h"
 
+// TODO: fix memory leak here (VAOs are created every frame, but not destroyed)
 void drawGrid(Shader &shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection, glm::vec3 viewPos)
 {
     std::vector<float> gridVertices;

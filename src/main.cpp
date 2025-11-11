@@ -150,10 +150,10 @@ int main(void)
 
     // stbi_image_free(data);
     
-    Model cube(RELATIVE_RESOURCE_PATH"scenes/cube.obj");
+    Model cube(RELATIVE_RESOURCE_PATH"scenes/alien.obj");
 
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, (float)glm::radians(-55.0), glm::vec3(1.0f, 0.0f, 0.0f));
+    // model = glm::rotate(model, (float)glm::radians(-55.0), glm::vec3(1.0f, 0.0f, 0.0f));
 
     glm::mat4 view = glm::mat4(1.0f);
 
@@ -165,30 +165,9 @@ int main(void)
 
     glm::vec3 lightPos = glm::vec3(5.0f, 4.0f, 5.0f);
 
-    // ///////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////
 
-    // float lineVertices[] = {
-    //      100, 0, 0,
-    //     -100, 0, 0,
-    //      100, 0, -1,
-    //     -100, 0, -1,
-    //      100, 0, 1,
-    //     -100, 0, 1,
-    // };
-    // GLuint gVAO, gVBO;
-
-    // glGenVertexArrays(1, &gVAO);
-    // glBindVertexArray(gVAO);
-
-    // glGenBuffers(1, &gVBO);
-    // glBindBuffer(GL_ARRAY_BUFFER, gVBO);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(lineVertices), lineVertices, GL_STATIC_DRAW);
-
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    // glEnableVertexAttribArray(0);
-
-    // glBindVertexArray(0); 
-    // ///////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////
 
     drawGrid();
 
@@ -209,17 +188,20 @@ int main(void)
         // glBindTexture(GL_TEXTURE_2D, texture);
         // glUniform3f(vertexColorLocation, r, g, b);
 
-        glm::mat4 model = glm::mat4(1.0f);
+        // glm::mat4 model = glm::mat4(1.0f);
         // model = glm::rotate(model, (float)glfwGetTime()/3, glm::vec3(0.0f, 1.0f, 0.0f));
         // model = glm::rotate(model, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
         view = camera.GetViewMatrix();
         drawGrid(gridShader, model, view, projection, camera.Position);
 
-        glm::mat4 transformModel = glm::translate(model, glm::vec3(0.0f, sin(glfwGetTime()) * 5, 0.0f));
+        float distX = (float)(cos(glfwGetTime()*2) * 3);
+        float distY = (float)(sin(glfwGetTime()*2) * 3);
+        // glm::mat4 transformModel = glm::translate(model, glm::vec3(distX, distY, 0.0f));
+        // glm::mat4 transformModel = glm::identity(); 
         modelShader.use();
 
-        modelShader.setMat4("model", glm::scale(transformModel, glm::vec3(1.5f)));
+        modelShader.setMat4("model", glm::scale(model, glm::vec3(0.1f)));
         modelShader.setMat4("view", view);
         modelShader.setMat4("projection", projection);
 

@@ -88,7 +88,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
         }
     }
 
-    // process materials
+    // TODO: process materials
     if (mesh->mMaterialIndex >= 0)
     {
         // aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
