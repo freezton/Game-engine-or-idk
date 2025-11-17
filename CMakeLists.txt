@@ -43,13 +43,14 @@ add_executable(game
     src/camera.cpp
     src/mesh.cpp
     src/model.cpp
-    src/utils.cpp
 
     src/component_array.cpp
     src/entity_manager.cpp
     src/component_manager.cpp
     src/system_manager.cpp
     src/coordinator.cpp
+
+    src/utils/grid.cpp
 )
 
 add_custom_command(TARGET game POST_BUILD

@@ -16,7 +16,7 @@
 #include "model.h"
 #include "shader.h"
 #include "camera.h"
-#include "utils.h"
+#include "utils/grid.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -83,11 +83,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     lastY = ypos;
 
     camera.ProcessMouseMovement(xoffset, yoffset);
-}
-
-void drawGrid()
-{
-    
 }
 
 int main(void)
@@ -169,7 +164,7 @@ int main(void)
 
     /////////////////////////////////////////////////////////////////////
 
-    drawGrid();
+    Grid grid;
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -193,7 +188,8 @@ int main(void)
         // model = glm::rotate(model, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
         view = camera.GetViewMatrix();
-        drawGrid(gridShader, model, view, projection, camera.Position);
+        grid.Draw(gridShader, model, view, projection, camera.Position);
+        // drawGrid(gridShader, model, view, projection, camera.Position);
 
         float distX = (float)(cos(glfwGetTime()*2) * 3);
         float distY = (float)(sin(glfwGetTime()*2) * 3);
