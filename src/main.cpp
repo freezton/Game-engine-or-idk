@@ -18,6 +18,9 @@
 #include "camera.h"
 #include "utils/grid.h"
 
+#include "coordinator.h"
+#include "systems/render_system.h"
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -85,6 +88,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
+Coordinator coordinator;
+
 int main(void)
 {
     if (!glfwInit())
@@ -118,6 +123,8 @@ int main(void)
     }
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
+    coordinator.Init();
+    
     stbi_set_flip_vertically_on_load(true);
 
     Shader modelShader(RELATIVE_RESOURCE_PATH"shaders/vertex.glsl", RELATIVE_RESOURCE_PATH"shaders/fragment.glsl");
@@ -145,6 +152,8 @@ int main(void)
 
     // stbi_image_free(data);
     
+    
+
     Model cube(RELATIVE_RESOURCE_PATH"scenes/alien.obj");
 
     glm::mat4 model = glm::mat4(1.0f);
@@ -179,13 +188,7 @@ int main(void)
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // int vertexColorLocation = glGetUniformLocation(shaderProgram, "cColor");
         // glBindTexture(GL_TEXTURE_2D, texture);
-        // glUniform3f(vertexColorLocation, r, g, b);
-
-        // glm::mat4 model = glm::mat4(1.0f);
-        // model = glm::rotate(model, (float)glfwGetTime()/3, glm::vec3(0.0f, 1.0f, 0.0f));
-        // model = glm::rotate(model, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
         view = camera.GetViewMatrix();
         grid.Draw(gridShader, model, view, projection, camera.Position);
@@ -193,16 +196,11 @@ int main(void)
 
         float distX = (float)(cos(glfwGetTime()*2) * 3);
         float distY = (float)(sin(glfwGetTime()*2) * 3);
-        // glm::mat4 transformModel = glm::translate(model, glm::vec3(distX, distY, 0.0f));
-        // glm::mat4 transformModel = glm::identity(); 
         modelShader.use();
 
         modelShader.setMat4("model", glm::scale(model, glm::vec3(0.1f)));
         modelShader.setMat4("view", view);
         modelShader.setMat4("projection", projection);
-
-        // GLuint lightLoc = glGetUniformLocation(shaderProgram.ID, "lightPos");
-        // glUniform3fv(lightLoc, 1, glm::value_ptr(lightPos));
 
         modelShader.setVec3("viewPos", camera.Position);
         modelShader.setVec3("lightPos", lightPos);
@@ -214,9 +212,6 @@ int main(void)
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    // glDeleteVertexArrays(1, &VAO);
-    // glDeleteBuffers(1, &VBO);
 
     glfwDestroyWindow(window);
     glfwTerminate();

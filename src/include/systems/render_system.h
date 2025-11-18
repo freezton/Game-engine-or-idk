@@ -5,7 +5,11 @@
 
 class RenderSystem : System
 {
+public:
     
+
+private:
+
 };
 
 #endif
