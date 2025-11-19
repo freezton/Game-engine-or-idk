@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <string>
 
 #include "types.h"
 #include "system.h"
@@ -59,8 +60,8 @@ public:
     }
 
 private:
-    std::unordered_map<const char*, Signature> mSignatures{};
-    std::unordered_map<const char*, std::shared_ptr<System>> mSystems{};
+    std::unordered_map<const char *, Signature> mSignatures{};
+    std::unordered_map<const char *, std::shared_ptr<System>> mSystems{};
 };
 
 #endif

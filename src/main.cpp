@@ -1,5 +1,7 @@
 #include <iostream>
 #include <stdio.h>
+#include <cstdlib>
+#include <ctime>
 
 #define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
@@ -20,6 +22,9 @@
 
 #include "coordinator.h"
 #include "systems/render_system.h"
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 #include "components/components.h"
 
@@ -90,10 +95,16 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
+int getRandomNum(int min, int max)
+{
+    return std::rand() % (max - min) + min;
+}
+
 Coordinator coordinator;
 
 int main(void)
 {
+    std::srand(std::time({}));
     if (!glfwInit())
     {
         std::cout << "Failed to initialize GLFW" << std::endl;
@@ -125,10 +136,7 @@ int main(void)
     }
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-    coordinator.Init();
 
-    coordinator.RegisterComponent<Transform>();
-    // coordinator.RegisterComponent<ModelComponent>();
 
     stbi_set_flip_vertically_on_load(true);
 
@@ -142,6 +150,57 @@ int main(void)
     gridShader.attachShader(GL_FRAGMENT_SHADER, "grid.frag");
     gridShader.link();
 
+    glm::vec3 lightPos = glm::vec3(5.0f, 4.0f, 5.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 model = glm::mat4(1.0f);
+
+    coordinator.Init();
+    coordinator.RegisterComponent<Transform>();
+    coordinator.RegisterComponent<ModelComponent>();
+    coordinator.RegisterComponent<UniformCallback>();
+
+    auto renderSystem = coordinator.RegisterSystem<RenderSystem>();
+
+    std::vector<Entity> entities;
+    std::unordered_map<Entity, glm::vec3> positions;
+    int count = getRandomNum(10, 100);
+    for (int i = 0; i < count; i++)
+    {
+        Entity e = coordinator.CreateEntity();
+        int d = 30;
+        float x = (float)(getRandomNum(0, d)) - d/2.0f;
+        float y = (float)(getRandomNum(0, d));
+        float z = (float)(getRandomNum(0, d)) - d/2.0f;
+        positions[e] = glm::vec3(x,y,z);
+
+        coordinator.AddComponent<Transform>(e, Transform{ 
+            glm::vec3(x, y, z), glm::vec3(0), glm::vec3(1.0f) 
+        });
+        coordinator.AddComponent<ModelComponent>(e, ModelComponent{ 
+            std::make_shared<Model>(RELATIVE_RESOURCE_PATH"scenes/cube.obj") 
+        });
+        coordinator.AddComponent<UniformCallback>(e, UniformCallback{
+            [&](ShaderProgram& shader) {
+                shader.setMat4("view", view);
+                shader.setMat4("projection", projection);
+                shader.setVec3("viewPos", camera.Position);
+                shader.setVec3("lightPos", lightPos);
+            }
+        });
+        entities.push_back(e);
+    }
+
+    // Entity e = coordinator.CreateEntity();
+    // coordinator.AddComponent<Transform>(e, Transform{ glm::vec3(0), glm::vec3(0), glm::vec3(0.1f) });
+    // coordinator.AddComponent<ModelComponent>(e, ModelComponent{ std::make_shared<Model>(RELATIVE_RESOURCE_PATH"scenes/alien.obj") });
+    // coordinator.AddComponent<UniformCallback>(e, UniformCallback{
+    //     [&](ShaderProgram& shader) {
+    //         shader.setMat4("view", view);
+    //         shader.setMat4("projection", projection);
+    //         shader.setVec3("viewPos", camera.Position);
+    //         shader.setVec3("lightPos", lightPos);
+    //     }
+    // });
 
     // // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -167,12 +226,10 @@ int main(void)
 
 
 
-    Model cube(RELATIVE_RESOURCE_PATH"scenes/alien.obj");
+    // Model cube(RELATIVE_RESOURCE_PATH"scenes/alien.obj");
 
-    glm::mat4 model = glm::mat4(1.0f);
     // model = glm::rotate(model, (float)glm::radians(-55.0), glm::vec3(1.0f, 0.0f, 0.0f));
 
-    glm::mat4 view = glm::mat4(1.0f);
 
     projection = glm::perspective(glm::radians(FOVY), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
 
@@ -180,7 +237,6 @@ int main(void)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glm::vec3 lightPos = glm::vec3(5.0f, 4.0f, 5.0f);
 
     /////////////////////////////////////////////////////////////////////
 
@@ -208,13 +264,20 @@ int main(void)
 
         modelShader.use();
 
-        modelShader.setMat4("model", glm::scale(model, glm::vec3(0.1f)));
-        modelShader.setMat4("view", view);
-        modelShader.setMat4("projection", projection);
-        modelShader.setVec3("viewPos", camera.Position);
-        modelShader.setVec3("lightPos", lightPos);
+        // modelShader.setMat4("model", glm::scale(model, glm::vec3(0.1f)));
+        // modelShader.setMat4("view", view);
+        // modelShader.setMat4("projection", projection);
+        // modelShader.setVec3("viewPos", camera.Position);
+        // modelShader.setVec3("lightPos", lightPos);
 
-        cube.Draw(modelShader);
+        // cube.Draw(modelShader);
+        for (auto e: entities)
+        {
+            Transform& t = coordinator.GetComponent<Transform>(e);
+            t.position.x = sin(glfwGetTime()) * positions[e].x;
+        }
+        
+        renderSystem->Update(modelShader);
 
         glBindVertexArray(0);
         ////////////////////////////////////////////

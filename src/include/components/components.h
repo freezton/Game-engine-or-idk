@@ -18,4 +18,9 @@ struct ModelComponent
     std::shared_ptr<Model> model;
 };
 
+struct UniformCallback
+{
+    std::function<void(ShaderProgram&)> applyUniforms;
+};
+
 #endif
