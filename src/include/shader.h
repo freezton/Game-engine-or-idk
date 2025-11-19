@@ -9,16 +9,19 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <vector>
 
-class Shader
+class ShaderProgram
 {
 public:
-    // program ID
-    unsigned int ID;
 
-    Shader(const char* vertexPath, const char* fragmentPath);
+    ShaderProgram();
 
+    GLuint getID();
     void use();
+    void link();
+    void attachShader(GLenum type, const std::string& source);
+    
     // uniform functions
     void setBool(const std::string& name, bool value) const;
     void setInt(const std::string& name, int value) const;
@@ -27,6 +30,10 @@ public:
     void setMat4(const std::string& name, glm::mat4 value) const;
 
 private:
+    GLuint mProgramID;
+    std::vector<GLuint> mAttachedShaders;
+
+    std::string shaderTypeToString(GLenum type);
     void checkCompileErrors(unsigned int shader, std::string type);
 };
 

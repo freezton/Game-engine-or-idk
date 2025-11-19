@@ -5,7 +5,7 @@ Grid::Grid()
     setupGrid();
 }
 
-void Grid::Draw(Shader &shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection, glm::vec3 viewPos)
+void Grid::Draw(ShaderProgram& shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection, glm::vec3 viewPos)
 {
     gridVertices.clear();
     int minX = (int)(viewPos.x - halfExtent);

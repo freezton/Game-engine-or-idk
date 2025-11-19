@@ -10,13 +10,42 @@
 class EntityManager
 {
 public:
-    EntityManager();
+    EntityManager()
+    {
+        for (Entity entity = 0; entity < MAX_ENTITIES; ++entity)
+        {
+            mAvailableEntities.push(entity);
+        }
+    }
 
-    Entity CreateEntity();
-    void DestroyEntity(Entity entity);
+    Entity CreateEntity()
+    {
+        assert(mLivingEntityCount < MAX_ENTITIES && "Too many entities");
+        Entity id = mAvailableEntities.front();
+        mAvailableEntities.pop();
+        ++mLivingEntityCount;
+        return id;
+    }
 
-    void SetSignature(Signature signature, Entity entity);
-    Signature GetSignature(Entity entity);
+    void DestroyEntity(Entity entity)
+    {
+        assert(entity < MAX_ENTITIES && "Entity out of range");
+        mSignatures[entity].reset();
+        mAvailableEntities.push(entity);
+        --mLivingEntityCount;
+    }
+
+    void SetSignature(Signature signature, Entity entity)
+    {
+        assert(entity < MAX_ENTITIES && "Entity out of range");
+        mSignatures[entity] = signature;
+    }
+
+    Signature GetSignature(Entity entity)
+    {
+        assert(entity < MAX_ENTITIES && "Entity out of range");
+        return mSignatures[entity];
+    }
 
 private:
     std::queue<Entity> mAvailableEntities{};

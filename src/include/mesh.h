@@ -21,7 +21,7 @@ struct Texture
     std::string type;
 };
 
-class Mesh 
+class Mesh
 {
 public:
     std::vector<Vertex> vertices;
@@ -29,7 +29,7 @@ public:
     std::vector<Texture> textures;
 
     Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indicies, std::vector<Texture> textures);
-    void Draw(Shader &shader);
+    void Draw(ShaderProgram& shader);
 
 private:
     GLuint VAO, VBO, EBO;

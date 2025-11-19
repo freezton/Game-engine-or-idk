@@ -8,7 +8,7 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vecto
     setupMesh();
 }
 
-void Mesh::Draw(Shader &shader)
+void Mesh::Draw(ShaderProgram& shader)
 {
     // unsigned int diffuseNr = 1;
     // unsigned int specularNr = 1;
@@ -44,7 +44,7 @@ void Mesh::setupMesh()
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-    
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
 

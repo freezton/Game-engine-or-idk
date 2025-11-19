@@ -21,6 +21,8 @@
 #include "coordinator.h"
 #include "systems/render_system.h"
 
+#include "components/components.h"
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -51,7 +53,7 @@ void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -124,11 +126,22 @@ int main(void)
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     coordinator.Init();
-    
+
+    coordinator.RegisterComponent<Transform>();
+    // coordinator.RegisterComponent<ModelComponent>();
+
     stbi_set_flip_vertically_on_load(true);
 
-    Shader modelShader(RELATIVE_RESOURCE_PATH"shaders/vertex.glsl", RELATIVE_RESOURCE_PATH"shaders/fragment.glsl");
-    Shader gridShader(RELATIVE_RESOURCE_PATH"shaders/grid_vertex.glsl", RELATIVE_RESOURCE_PATH"shaders/grid_fragment.glsl");
+    ShaderProgram modelShader;
+    modelShader.attachShader(GL_VERTEX_SHADER, "model.vert");
+    modelShader.attachShader(GL_FRAGMENT_SHADER, "model.frag");
+    modelShader.link();
+    
+    ShaderProgram gridShader;
+    gridShader.attachShader(GL_VERTEX_SHADER, "grid.vert");
+    gridShader.attachShader(GL_FRAGMENT_SHADER, "grid.frag");
+    gridShader.link();
+
 
     // // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -151,8 +164,8 @@ int main(void)
     // glGenerateMipmap(GL_TEXTURE_2D);
 
     // stbi_image_free(data);
-    
-    
+
+
 
     Model cube(RELATIVE_RESOURCE_PATH"scenes/alien.obj");
 
@@ -192,20 +205,17 @@ int main(void)
 
         view = camera.GetViewMatrix();
         grid.Draw(gridShader, model, view, projection, camera.Position);
-        // drawGrid(gridShader, model, view, projection, camera.Position);
 
-        float distX = (float)(cos(glfwGetTime()*2) * 3);
-        float distY = (float)(sin(glfwGetTime()*2) * 3);
         modelShader.use();
 
         modelShader.setMat4("model", glm::scale(model, glm::vec3(0.1f)));
         modelShader.setMat4("view", view);
         modelShader.setMat4("projection", projection);
-
         modelShader.setVec3("viewPos", camera.Position);
         modelShader.setVec3("lightPos", lightPos);
 
         cube.Draw(modelShader);
+
         glBindVertexArray(0);
         ////////////////////////////////////////////
 
