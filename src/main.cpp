@@ -150,7 +150,6 @@ int main(void)
     gridShader.attachShader(GL_FRAGMENT_SHADER, "grid.frag");
     gridShader.link();
 
-    glm::vec3 lightPos = glm::vec3(5.0f, 4.0f, 5.0f);
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 model = glm::mat4(1.0f);
 
@@ -158,8 +157,15 @@ int main(void)
     coordinator.RegisterComponent<Transform>();
     coordinator.RegisterComponent<ModelComponent>();
     coordinator.RegisterComponent<UniformCallback>();
+    coordinator.RegisterComponent<PointLight>();
 
     auto renderSystem = coordinator.RegisterSystem<RenderSystem>();
+    Signature renderSystemSignature;
+	// renderSystemSignature.set(coordinator.GetComponentType<Transform>());
+    // renderSystemSignature.set(coordinator.GetComponentType<ModelComponent>());
+	renderSystemSignature.set(coordinator.GetComponentType<UniformCallback>());
+	coordinator.SetSystemSignature<RenderSystem>(renderSystemSignature);
+
 
     std::vector<Entity> entities;
     std::unordered_map<Entity, glm::vec3> positions;
@@ -184,52 +190,23 @@ int main(void)
                 shader.setMat4("view", view);
                 shader.setMat4("projection", projection);
                 shader.setVec3("viewPos", camera.Position);
-                shader.setVec3("lightPos", lightPos);
+                // shader.setVec3("lightPos", lightPos);
             }
         });
         entities.push_back(e);
     }
+    
+    glm::vec3 lightPos = glm::vec3(5.0f, 4.0f, 5.0f);
 
-    // Entity e = coordinator.CreateEntity();
-    // coordinator.AddComponent<Transform>(e, Transform{ glm::vec3(0), glm::vec3(0), glm::vec3(0.1f) });
-    // coordinator.AddComponent<ModelComponent>(e, ModelComponent{ std::make_shared<Model>(RELATIVE_RESOURCE_PATH"scenes/alien.obj") });
-    // coordinator.AddComponent<UniformCallback>(e, UniformCallback{
-    //     [&](ShaderProgram& shader) {
-    //         shader.setMat4("view", view);
-    //         shader.setMat4("projection", projection);
-    //         shader.setVec3("viewPos", camera.Position);
-    //         shader.setVec3("lightPos", lightPos);
-    //     }
+    Entity lightSource = coordinator.CreateEntity();
+    coordinator.AddComponent<Transform>(lightSource, Transform{ 
+        lightPos, glm::vec3(0), glm::vec3(0.1f) 
+    });
+    // coordinator.AddComponent<ModelComponent>(lightSource, ModelComponent{ 
+    //     std::make_shared<Model>(RELATIVE_RESOURCE_PATH"scenes/cube.obj") 
     // });
 
     // // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    // // some textures
-    // GLuint texture;
-    // glGenTextures(1, &texture);
-    // glBindTexture(GL_TEXTURE_2D, texture);
-
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // int width, height, nrChannels;
-    // unsigned char* data = stbi_load(RELATIVE_RESOURCE_PATH"textures/image.jpg", &width, &height, &nrChannels, 0);
-
-    // glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // align image rows to 1 byte (4 default)
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    // glGenerateMipmap(GL_TEXTURE_2D);
-
-    // stbi_image_free(data);
-
-
-
-    // Model cube(RELATIVE_RESOURCE_PATH"scenes/alien.obj");
-
-    // model = glm::rotate(model, (float)glm::radians(-55.0), glm::vec3(1.0f, 0.0f, 0.0f));
-
 
     projection = glm::perspective(glm::radians(FOVY), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
 
@@ -264,19 +241,13 @@ int main(void)
 
         modelShader.use();
 
-        // modelShader.setMat4("model", glm::scale(model, glm::vec3(0.1f)));
-        // modelShader.setMat4("view", view);
-        // modelShader.setMat4("projection", projection);
-        // modelShader.setVec3("viewPos", camera.Position);
-        // modelShader.setVec3("lightPos", lightPos);
-
         // cube.Draw(modelShader);
         for (auto e: entities)
         {
             Transform& t = coordinator.GetComponent<Transform>(e);
-            t.position.x = sin(glfwGetTime()) * positions[e].x;
+            t.position.x = sin(glfwGetTime() / 5) * positions[e].x;
         }
-        
+
         renderSystem->Update(modelShader);
 
         glBindVertexArray(0);

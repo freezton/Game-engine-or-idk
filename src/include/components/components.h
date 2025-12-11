@@ -23,4 +23,9 @@ struct UniformCallback
     std::function<void(ShaderProgram&)> applyUniforms;
 };
 
+struct PointLight
+{
+    glm::vec3 position;
+};
+
 #endif
